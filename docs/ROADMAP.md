@@ -52,9 +52,9 @@ Critérios de aceitação:
 - GitHub Pages exibindo a aplicação;
 - nenhum framework frontend.
 
-## Fase 03 — Primeiro catálogo
+## Fase 03 — Importador de Cifras e Primeiro Catálogo
 
-Status: **PENDENTE**
+Status: **CONCLUÍDA**
 
 Objetivo:
 

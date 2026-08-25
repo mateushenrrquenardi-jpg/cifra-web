@@ -43,8 +43,8 @@ O GitHub é a fonte oficial do conteúdo das cifras.
 
 ## Estado do projeto
 
-Fase atual: **Fase 02 — Estrutura inicial do projeto (Concluída)**.
-Próxima fase: **Fase 03 — Primeiro catálogo**.
+Fase atual: **Fase 03 — Importador de Cifras e Primeiro Catálogo (Concluída)**.
+Próxima fase: **Fase 04 — Leitura de cifras**.
 
 ## Princípios
 
