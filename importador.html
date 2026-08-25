@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Importador de Cifras — Cifra Web. Converta cifras externas para Markdown padronizado.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Importador de Cifras — Cifra Web</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/importador-app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-container">
+      <div class="brand">
+        <a href="index.html" class="brand-link" aria-label="Voltar para a página inicial">
+          <span class="brand-icon" aria-hidden="true">♪</span>
+        </a>
+        <div class="brand-text">
+          <h1 class="site-title"><a href="index.html" class="title-link">Cifra Web</a></h1>
+          <p class="site-subtitle">Ferramenta de Importação de Cifras</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-secondary btn-sm">← Início</a>
+        <div class="phase-badge" title="Fase 03 — Importador de Cifras">
+          <span class="status-dot"></span>
+          <span class="phase-text">Fase 03: Importador</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <!-- Cabeçalho da Ferramenta -->
+      <section class="page-intro">
+        <h2 class="page-title">Importador de Cifras</h2>
+        <p class="page-desc">
+          Cole abaixo o conteúdo completo copiado de fontes externas (como Cifra Club). A ferramenta interpretará automaticamente o título, artista, tom e acordes, convertendo tudo para o formato Markdown padronizado do projeto.
+        </p>
+      </section>
+
+      <!-- Área de Entrada de Texto -->
+      <section class="card input-section" aria-labelledby="heading-input">
+        <div class="card-header">
+          <h3 id="heading-input" class="section-title">
+            <span class="section-icon" aria-hidden="true">📋</span> Conteúdo Bruto da Cifra
+          </h3>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-exemplo" title="Carregar exemplo da música 'Ele É Exaltado'">
+            Carregar exemplo
+          </button>
+        </div>
+        <div class="card-body">
+          <label for="input-cifra" class="visually-hidden">Cole aqui a cifra copiada</label>
+          <textarea 
+            id="input-cifra" 
+            class="textarea-cifra" 
+            rows="10" 
+            placeholder="Cole aqui o texto copiado (com título, artista, tom e acordes)..."
+            spellcheck="false"
+          ></textarea>
+          
+          <div class="action-bar">
+            <button type="button" class="btn btn-primary btn-lg" id="btn-processar">
+              <span>⚡</span> Processar cifra
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Caixa de Alertas e Validação -->
+      <div id="alert-container" class="alert-box" hidden aria-live="polite"></div>
+
+      <!-- Seção de Resultados (Metadados + Preview) -->
+      <div id="section-result" class="section-result" hidden>
+        <div class="result-grid">
+          <!-- Coluna 1: Revisão de Metadados -->
+          <section class="card meta-form-card" aria-labelledby="heading-meta">
+            <div class="card-header">
+              <h3 id="heading-meta" class="section-title">
+                <span class="section-icon" aria-hidden="true">⚙️</span> Metadados e Ajustes
+              </h3>
+            </div>
+            <div class="card-body">
+              <form id="form-metadata" class="form-grid" onsubmit="return false;">
+                <div class="form-group">
+                  <label for="meta-title" class="form-label">Título da Música <span class="required">*</span></label>
+                  <input type="text" id="meta-title" class="form-input" required placeholder="Ex: Ele É Exaltado">
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-artist" class="form-label">Artista Oficial <span class="required">*</span></label>
+                  <input type="text" id="meta-artist" class="form-input" required placeholder="Ex: Adhemar de Campos">
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="meta-original-key" class="form-label">Tom Original <span class="required">*</span></label>
+                    <input type="text" id="meta-original-key" class="form-input" required placeholder="Ex: E, C#m, Bb">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="meta-category" class="form-label">Categoria / Gênero <span class="required">*</span></label>
+                    <input type="text" id="meta-category" class="form-input" required placeholder="Ex: Gospel, Rock, MPB">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="meta-tags" class="form-label">Tags (separadas por vírgula)</label>
+                    <input type="text" id="meta-tags" class="form-input" placeholder="Ex: louvor, anos-80">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="meta-created-at" class="form-label">Data de Inclusão <span class="required">*</span></label>
+                    <input type="date" id="meta-created-at" class="form-input" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-author" class="form-label">Autor / Compositor (opcional)</label>
+                  <input type="text" id="meta-author" class="form-input" placeholder="Ex: Twila Paris / Versão: Adhemar de Campos">
+                </div>
+
+                <div class="form-group">
+                  <label for="meta-body" class="form-label">Corpo da Cifra Formatada</label>
+                  <textarea id="meta-body" class="form-textarea-body" rows="12" spellcheck="false"></textarea>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- Coluna 2: Pré-visualização do Markdown e Download -->
+          <section class="card preview-card" aria-labelledby="heading-preview">
+            <div class="card-header">
+              <h3 id="heading-preview" class="section-title">
+                <span class="section-icon" aria-hidden="true">📄</span> Pré-visualização do Arquivo
+              </h3>
+              <div class="file-badge">
+                <span class="file-icon">📁</span>
+                <code id="preview-filename" class="filename-text">cifra.md</code>
+              </div>
+            </div>
+            <div class="card-body preview-body-container">
+              <pre class="preview-markdown-box"><code id="preview-markdown"></code></pre>
+            </div>
+            <div class="card-footer">
+              <div class="export-actions">
+                <button type="button" class="btn btn-secondary" id="btn-copy">
+                  <span>📋</span> Copiar Markdown
+                </button>
+                <button type="button" class="btn btn-primary" id="btn-download">
+                  <span>⬇️</span> Baixar .md
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <p class="footer-copy">&copy; 2026 Cifra Web — Importador de Cifras.</p>
+      <p class="footer-meta">HTML5 &bull; CSS3 &bull; JavaScript Puro &bull; 100% no Navegador</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testes Automatizados — Cifra Web (Fase 03)</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .test-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+    }
+    .test-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: var(--radius-md);
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+    }
+    .test-item.pass {
+      border-left: 4px solid var(--status-active);
+    }
+    .test-item.fail {
+      border-left: 4px solid #ef4444;
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+    .test-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .test-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+    }
+    .badge-pass {
+      background-color: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+    }
+    .badge-fail {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+    .summary-card {
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      border-radius: var(--radius-lg);
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <div class="brand" style="margin-bottom: 1.5rem;">
+      <span class="brand-icon">✓</span>
+      <div class="brand-text">
+        <h1 class="site-title">Cifra Web — Testes do Importador</h1>
+        <p class="site-subtitle">Fase 03: Validação Automatizada de Parser e Módulos</p>
+      </div>
+    </div>
+
+    <div class="summary-card" id="summary-card">
+      <div>
+        <h2 id="summary-title" style="font-size: 1.2rem; font-weight: 700;">Executando testes...</h2>
+        <p id="summary-desc" style="color: var(--text-secondary); font-size: 0.9rem;">Aguardando execução dos módulos...</p>
+      </div>
+      <div id="summary-badge"></div>
+    </div>
+
+    <div id="test-list"></div>
+
+    <div style="margin-top: 1.5rem; text-align: center;">
+      <a href="../importador.html" class="btn btn-secondary">← Abrir Importador</a>
+      <a href="../index.html" class="btn btn-secondary">Ir para Início</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { runTests } from './test-suite.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const results = runTests();
+      const testList = document.getElementById('test-list');
+      const summaryTitle = document.getElementById('summary-title');
+      const summaryDesc = document.getElementById('summary-desc');
+      const summaryBadge = document.getElementById('summary-badge');
+
+      let passedCount = 0;
+      testList.innerHTML = '';
+
+      results.forEach(res => {
+        if (res.passed) passedCount++;
+
+        const item = document.createElement('div');
+        item.className = `test-item ${res.passed ? 'pass' : 'fail'}`;
+        item.innerHTML = `
+          <span class="test-name">${res.name}</span>
+          <span class="test-badge ${res.passed ? 'badge-pass' : 'badge-fail'}">
+            ${res.passed ? 'PASSOU' : 'FALHOU'}
+          </span>
+        `;
+        testList.appendChild(item);
+      });
+
+      const allPassed = passedCount === results.length;
+      summaryTitle.textContent = allPassed ? 'Todos os testes passaram com sucesso!' : 'Alguns testes falharam';
+      summaryDesc.textContent = `${passedCount} de ${results.length} testes foram aprovados.`;
+      summaryBadge.innerHTML = `<span class="badge ${allPassed ? 'badge-pass' : 'badge-fail'}" style="font-size: 1rem; padding: 0.5rem 1rem;">${passedCount}/${results.length}</span>`;
+    });
+  </script>
+</body>
+</html>

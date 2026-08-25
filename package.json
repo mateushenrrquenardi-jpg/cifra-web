@@ -1,0 +1,9 @@
+{
+  "name": "cifra-web",
+  "version": "0.3.0",
+  "type": "module",
+  "description": "Cifra Web — Aplicação web minimalista para consulta e importação de cifras musicais.",
+  "scripts": {
+    "test": "node tests/test-node.js"
+  }
+}
