@@ -153,6 +153,31 @@
                 <button type="button" class="btn btn-primary" id="btn-download">
                   <span>⬇️</span> Baixar .md
                 </button>
+                <button type="button" class="btn btn-publish" id="btn-publish" title="Publicar diretamente no repositório cifra-catalogo">
+                  <span>🚀</span> Publicar no catálogo
+                </button>
+              </div>
+
+              <!-- Seção de Configuração do Token GitHub -->
+              <div class="publish-section" id="publish-section">
+                <div class="publish-config">
+                  <div class="publish-config-row">
+                    <div class="form-group">
+                      <label for="github-pat" class="form-label">GitHub Token (PAT)</label>
+                      <input type="password" id="github-pat" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btn-save-token">Salvar</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="btn-clear-token" title="Remover token salvo">✕</button>
+                  </div>
+                  <div id="token-status-container">
+                    <span class="token-status token-status-none" id="token-status">⚪ Nenhum token configurado</span>
+                  </div>
+                  <p class="security-notice">
+                    ⚠️ O token é armazenado apenas no navegador (localStorage). Nunca compartilhe seu token.
+                    <a href="https://github.com/settings/tokens/new?scopes=repo&description=Cifra+Web" target="_blank" rel="noopener" class="publish-result-link">Gerar token no GitHub →</a>
+                  </p>
+                </div>
+                <div id="publish-feedback" hidden></div>
               </div>
             </div>
           </section>
