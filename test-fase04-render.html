@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste - Fase 04</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    .viewer-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #334155; }
+    .viewer-song-title { font-size: 2rem; margin-bottom: 0.5rem; }
+    .viewer-artist-name { color: #94a3b8; font-size: 1.1rem; }
+    .cifra-body { 
+      background-color: #1e293b;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      font-family: ui-monospace, monospace;
+      font-size: 1rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+    }
+    .chord { color: #38bdf8; font-weight: bold; }
+    .test-info {
+      background-color: #1e293b;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #22c55e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="test-info">
+      <h2 style="color: #22c55e; margin-bottom: 0.5rem;">✅ FASE 04 — Leitura de Cifras</h2>
+      <p>Teste de Renderização HTML do Visualizador de Cifras</p>
+    </div>
+
+    <div class="viewer-header">
+      <h1 class="viewer-song-title">Ele É Exaltado</h1>
+      <p class="viewer-artist-name">Adhemar de Campos</p>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Tom: E • Categoria: Gospel</p>
+    </div>
+
+    <pre class="cifra-body"><code><span class="chord">[C]</span> <span class="chord">[D]</span> <span class="chord">[Em7]</span> <span class="chord">[D]</span>
+
+<span class="chord">[E]</span>
+Ele é exaltado
+     <span class="chord">[E/G#]</span>     <span class="chord">[A]</span>
+O rei é exaltado nos céus
+     <span class="chord">[F#m7]</span>    <span class="chord">[B7]</span>
+Eu louvarei
+<span class="chord">[E]</span>
+Ele é exaltado
+     <span class="chord">[E/G#]</span>     <span class="chord">[A]</span>
+Pra sempre exaltado
+   <span class="chord">[A/C#]</span> <span class="chord">[B/D#]</span> <span class="chord">[C#7(4/9)]</span>
+Seu no - me  louvarei</code></pre>
+
+    <div style="margin-top: 2rem; padding: 1rem; background-color: #1e293b; border-radius: 0.5rem;">
+      <h3 style="color: #38bdf8; margin-bottom: 1rem;">Critérios de Aceitação</h3>
+      <ul style="list-style: none; gap: 0.5rem; display: flex; flex-direction: column;">
+        <li>✅ <strong>Metadados reconhecidos:</strong> ✓</li>
+        <li>✅ <strong>Acordes reconhecidos:</strong> 15 acordes encontrados</li>
+        <li>✅ <strong>Posicionamento horizontal preservado:</strong> Espaços mantidos entre acordes</li>
+        <li>✅ <strong>Quebras de linha preservadas:</strong> 14 linhas</li>
+        <li>✅ <strong>Linhas sem acordes preservadas:</strong> Letras intactas</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

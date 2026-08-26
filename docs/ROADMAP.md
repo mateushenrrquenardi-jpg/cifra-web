@@ -70,19 +70,21 @@ Critérios:
 
 ## Fase 04 — Leitura de cifras
 
-Status: **PENDENTE**
+Status: **CONCLUÍDA** ✅
 
 Objetivo:
 
 Carregar um `.md` e apresentá-lo corretamente no navegador.
 
-Critérios:
+Critérios atendidos:
 
-- metadados reconhecidos;
-- acordes reconhecidos;
-- posicionamento horizontal preservado;
-- quebras de linha preservadas;
-- linhas sem acordes preservadas.
+- ✅ metadados reconhecidos — Frontmatter parseado corretamente (title, artist, category, tags, author, created_at, original_key);
+- ✅ acordes reconhecidos — Suporta acordes simples, com baixo e extensões complexas (15 acordes na cifra exemplo);
+- ✅ posicionamento horizontal preservado — Espaçamento relativo mantido entre acordes;
+- ✅ quebras de linha preservadas — Estrutura de linhas mantida intacta do arquivo original;
+- ✅ linhas sem acordes preservadas — Letras e texto renderizado sem alterações.
+
+Relatório completo: `FASE04_RELATORIO.md`
 
 ## Fase 05 — Listagem e pesquisa
 
