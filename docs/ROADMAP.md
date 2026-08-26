@@ -88,16 +88,23 @@ Relatório completo: `FASE04_RELATORIO.md`
 
 ## Fase 05 — Listagem e pesquisa
 
-Status: **PENDENTE**
+Status: **CONCLUÍDA** ✅
 
 Objetivo:
 
 Implementar:
 
-- lista de músicas;
-- lista de artistas;
-- pesquisa por nome;
-- pesquisa por artista.
+- ✅ lista de músicas — Ordenadas alfabeticamente com título, artista e tom;
+- ✅ lista de artistas — Com contagem de músicas;
+- ✅ pesquisa por nome — Filtro em tempo real;
+- ✅ pesquisa por artista — Filtro em tempo real.
+
+Critério bônus atendido:
+- ✅ pesquisa por categoria — Filtro funcionando.
+
+Nota importante: A Fase 05 estava 95% implementada desde a Fase 04 em app.js. Esta fase consistiu em validação e documentação.
+
+Relatório completo: `docs/FASE05_RELATORIO.md`
 
 ## Fase 06 — Experiência de leitura
 
