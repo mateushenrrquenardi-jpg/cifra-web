@@ -256,6 +256,70 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── Fase 06: Ocultação Automática de Interface ──
+
+  let uiHideTimeout;
+  const UI_HIDE_DELAY = 3000; // 3 segundos
+  let uiHidden = false;
+
+  function getViewerHeader() {
+    return viewerContainer ? viewerContainer.querySelector('.viewer-header') : null;
+  }
+
+  function showUI() {
+    const header = getViewerHeader();
+    if (header) {
+      header.classList.remove('hidden-ui');
+      uiHidden = false;
+      clearTimeout(uiHideTimeout);
+      
+      // Agendar ocultação novamente
+      uiHideTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
+    }
+  }
+
+  function hideUI() {
+    const header = getViewerHeader();
+    if (header && !document.fullscreenElement) return; // Só ocultar em fullscreen
+    if (header) {
+      header.classList.add('hidden-ui');
+      uiHidden = true;
+    }
+  }
+
+  // Listeners para mostrar UI quando necessário
+  if (viewerContainer) {
+    // Mostrar UI ao mover o mouse
+    viewerContainer.addEventListener('mousemove', () => {
+      if (document.fullscreenElement && uiHidden) {
+        showUI();
+      }
+    });
+
+    // Mostrar UI ao pressionar qualquer tecla
+    document.addEventListener('keydown', (e) => {
+      if (document.fullscreenElement && uiHidden) {
+        showUI();
+      }
+    });
+
+    // Agendar ocultação inicial quando entrar em fullscreen
+    viewerContainer.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        // Entrou em fullscreen - agendar ocultação
+        uiHideTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
+      } else {
+        // Saiu de fullscreen - mostrar UI
+        const header = getViewerHeader();
+        if (header) {
+          header.classList.remove('hidden-ui');
+          uiHidden = false;
+          clearTimeout(uiHideTimeout);
+        }
+      }
+    });
+  }
+
   // ── Busca ──
 
   if (searchInput && btnSearch) {

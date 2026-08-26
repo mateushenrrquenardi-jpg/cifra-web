@@ -907,3 +907,38 @@ input {
   border: 1px solid rgba(234, 179, 8, 0.2);
   border-radius: var(--radius-sm);
 }
+
+/* ==========================================================================
+    13. Fase 06 — Experiência de Leitura (Ocultação Automática de Interface)
+    ========================================================================== */
+
+.viewer-header {
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+  opacity: 1;
+}
+
+.viewer-header.hidden-ui {
+  opacity: 0;
+  transform: translateY(-1rem);
+  pointer-events: none;
+}
+
+.cifra-viewer-container {
+  position: relative;
+}
+
+.ui-show-hint {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
+}
+
+.ui-show-hint.visible {
+  opacity: 0.6;
+}

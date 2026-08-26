@@ -108,15 +108,23 @@ Relatório completo: `docs/FASE05_RELATORIO.md`
 
 ## Fase 06 — Experiência de leitura
 
-Status: **PENDENTE**
+Status: **CONCLUÍDA**
 
 Objetivo:
 
 Implementar:
 
-- ajuste do tamanho da letra;
-- tela cheia;
-- ocultação automática da interface.
+- ✅ ajuste do tamanho da letra — Botões A-, A+ com incremento 0.1rem (0.6 a 2.5rem)
+- ✅ tela cheia — Botão ⛶ com API Fullscreen moderna
+- ✅ ocultação automática da interface — Oculta header após 3seg em fullscreen, reativa com mouse/teclado
+
+Critérios de aceitação atendidos: **10/10 ✅**
+
+Relatório completo: `docs/FASE06_RELATORIO.md`
+
+Arquivos modificados:
+- `js/app.js` — Adicionadas funções showUI/hideUI e listeners
+- `css/style.css` — Adicionada classe .hidden-ui com transição suave
 
 ## Fase 07 — Qualidade e revisão
 
