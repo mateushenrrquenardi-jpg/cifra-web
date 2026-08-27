@@ -102,7 +102,15 @@ Implementar:
 Critério bônus atendido:
 - ✅ pesquisa por categoria — Filtro funcionando.
 
-Nota importante: A Fase 05 estava 95% implementada desde a Fase 04 em app.js. Esta fase consistiu em validação e documentação.
+Nota importante (revisão): a UI de listagem/busca já existia desde a Fase 04,
+mas a primeira validação da Fase 05 não pegou um problema real de
+carregamento — o catálogo era buscado via API do GitHub
+(`api.github.com/.../git/trees`), que tem limite de 60 requisições/hora sem
+autenticação e falhava de forma intermitente para usuários reais. Isso foi
+corrigido: a listagem agora usa um índice estático (`index.json`, mantido no
+repositório do catálogo) servido via `raw.githubusercontent.com`, que não
+tem esse limite. Decisão documentada em `ARCHITECTURE.md` §6.1/6.2 e
+`DATA_MODEL.md` §15.
 
 Relatório completo: `docs/FASE05_RELATORIO.md`
 

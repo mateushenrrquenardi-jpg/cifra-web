@@ -241,3 +241,62 @@ A validação automatizada deverá impedir pelo menos:
 - Frontmatter inválido;
 - uso incorreto da estrutura de colchetes conforme as regras do projeto;
 - duplicidade de artista por grafias diferentes, quando isso puder ser detectado com segurança.
+
+## 15. Índice do catálogo (`index.json`)
+
+**Decisão tomada na Fase 05.** Definido em `ARCHITECTURE.md` §6.1/§6.2 o porquê:
+evitar depender da API do GitHub (limite de 60 requisições/hora sem
+autenticação) para a listagem de músicas e artistas.
+
+### 15.1 Localização
+
+Arquivo `index.json` na raiz do repositório do catálogo (`cifra-catalogo`).
+
+### 15.2 Geração
+
+Gerado automaticamente por `scripts/gerar-indice.js` (Node.js puro, sem
+dependências), a partir de todos os arquivos `.md` em `musicas/`. Roda:
+
+- automaticamente via GitHub Actions a cada push que altere `musicas/**`;
+- manualmente com `node scripts/gerar-indice.js`.
+
+Músicas com Frontmatter incompleto (campos obrigatórios ausentes) são
+excluídas do índice e reportadas no terminal — não derrubam a geração dos
+demais itens.
+
+### 15.3 Formato
+
+```json
+{
+  "generated_at": "2026-08-27T17:20:52.931Z",
+  "count": 2,
+  "songs": [
+    {
+      "path": "musicas/adhemar-de-campos/ele-e-exaltado.md",
+      "title": "Ele É Exaltado",
+      "artist": "Adhemar de Campos",
+      "category": "Gospel",
+      "tags": ["louvor", "adoracao"],
+      "author": "Twila Paris / Versão: Adhemar de Campos",
+      "created_at": "2026-08-24",
+      "original_key": "E"
+    }
+  ]
+}
+```
+
+### 15.4 O que o índice NÃO contém
+
+O corpo da cifra (letra + acordes) **não** entra no `index.json` — apenas
+metadados. Isso mantém o índice pequeno e rápido de carregar mesmo com o
+catálogo crescendo. O corpo de uma música é buscado sob demanda (ver
+`ARCHITECTURE.md` §6, fluxo de "abrir uma cifra específica") somente quando
+o usuário abre aquela música.
+
+### 15.5 Consistência
+
+`index.json` é um artefato **derivado** dos arquivos `.md` — nunca a fonte
+de verdade. Se um `.md` for editado diretamente sem passar pelo gerador (ou
+pelo Actions), o índice fica temporariamente desatualizado até a próxima
+geração. A fonte de verdade continua sendo os arquivos `.md`, conforme
+`ARCHITECTURE.md` §5.

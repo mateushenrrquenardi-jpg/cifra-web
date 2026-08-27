@@ -41,8 +41,6 @@ docs/
 #### Testes
 ```
 test-fase04-render.html
-test-fase05-render.html
-test-fase04.js
 test-fase05.js
 test-fase06.js
 ```
@@ -55,7 +53,6 @@ test-fase06.js
 - Visualização correta de acordes (chords)
 - Preservação de espaçamento e linha breaks
 - Metadata de música (título, artista, categoria)
-- Renderização dinâmica pelo GitHub API
 
 ### Fase 05: Listagem e Pesquisa ✅
 - Lista de músicas com busca dinâmica
@@ -63,6 +60,9 @@ test-fase06.js
 - Busca por nome de música
 - Busca por artista
 - Filtro por categoria
+- **Carregamento via índice estático (`index.json`) em vez da API do GitHub**,
+  para não esbarrar no limite de 60 requisições/hora sem autenticação. Ver
+  `docs/ARCHITECTURE.md` §6.1 e `docs/FASE05_RELATORIO.md`.
 
 ### Fase 06: Experiência de Leitura ✅
 - **A-** — Diminuir tamanho de fonte (0.6 a 2.5rem)
@@ -78,9 +78,8 @@ test-fase06.js
 | Fase | Testes | Status |
 |------|--------|--------|
 | 04 | 5/5 | ✅ Passou |
-| 05 | 5/5 | ✅ Passou |
+| 05 | 26/26 (14 de módulo + 12 de DOM simulado) | ✅ Passou |
 | 06 | 10/10 | ✅ Passou |
-| **Total** | **20/20** | **✅ 100%** |
 
 ---
 

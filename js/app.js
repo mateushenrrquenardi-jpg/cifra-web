@@ -1,17 +1,16 @@
 /**
  * Cifra Web — Aplicação Principal
- * Fase 04: Catálogo Dinâmico + Visualizador
- * 
+ * Fase 05: Listagem, Pesquisa e Visualizador
+ *
  * Regras: Vanilla JavaScript puro, sem dependências ou frameworks.
  */
 
 'use strict';
 
-import { loadCatalog, groupByArtist } from './modules/catalog-loader.js';
-import { parseFrontmatter } from './modules/frontmatter-parser.js';
+import { loadCatalog, loadSongBody, groupByArtist } from './modules/catalog-loader.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Cifra Web] Aplicação inicializada — Fase 04: Catálogo Dinâmico.');
+  console.log('[Cifra Web] Aplicação inicializada — Fase 05: Listagem e Pesquisa.');
 
   // Elementos principais da interface
   const searchInput = document.getElementById('search-input');
@@ -156,23 +155,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Abre e renderiza uma cifra no visualizador
-   * @param {{ path: string, metadata: object, body: string }} song
+   * Abre e renderiza uma cifra no visualizador.
+   *
+   * O índice do catálogo (loadCatalog) traz apenas metadados — o corpo
+   * (letra + acordes) é buscado aqui, sob demanda, na primeira vez que a
+   * música é aberta, e depois fica em cache em `song.body` para reaberturas
+   * instantâneas na mesma sessão.
+   *
+   * @param {{ path: string, metadata: object, body: string|null }} song
    */
-  function openCifra(song) {
+  async function openCifra(song) {
     if (!viewerContainer) return;
 
     viewerSongTitle.textContent = song.metadata.title || 'Sem título';
     viewerArtistName.textContent = song.metadata.artist || 'Desconhecido';
 
-    // Renderizar o corpo da cifra com destaque nos acordes [X]
     const codeEl = cifraBody.querySelector('code');
-    if (codeEl) {
-      codeEl.innerHTML = renderCifraBody(song.body);
-    }
 
     viewerContainer.hidden = false;
     viewerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Já temos o corpo em cache (aberta antes nesta sessão)
+    if (song.body !== null && song.body !== undefined) {
+      if (codeEl) codeEl.innerHTML = renderCifraBody(song.body);
+      return;
+    }
+
+    // Buscar o corpo sob demanda
+    if (codeEl) codeEl.innerHTML = '<span class="viewer-loading">Carregando cifra...</span>';
+
+    try {
+      const { body } = await loadSongBody(song.path);
+      song.body = body; // cache para próximas aberturas
+      if (codeEl) codeEl.innerHTML = renderCifraBody(body);
+    } catch (error) {
+      console.error('[Cifra Web] Erro ao carregar corpo da cifra:', error);
+      if (codeEl) {
+        codeEl.innerHTML = '<span class="viewer-error">Não foi possível carregar esta cifra. Tente novamente.</span>';
+      }
+    }
   }
 
   /**
@@ -369,7 +390,13 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('[Cifra Web] Erro ao carregar catálogo:', error);
       if (musicasPlaceholder) {
         musicasPlaceholder.querySelector('.placeholder-title').textContent = 'Erro ao carregar';
-        musicasPlaceholder.querySelector('.placeholder-desc').textContent = 'Não foi possível conectar ao GitHub. Tente novamente mais tarde.';
+        musicasPlaceholder.querySelector('.placeholder-desc').textContent =
+          'Não foi possível carregar o índice do catálogo. Verifique sua conexão e tente novamente.';
+      }
+      if (artistasPlaceholder) {
+        artistasPlaceholder.querySelector('.placeholder-title').textContent = 'Erro ao carregar';
+        artistasPlaceholder.querySelector('.placeholder-desc').textContent =
+          'Não foi possível carregar o índice do catálogo.';
       }
     }
   }

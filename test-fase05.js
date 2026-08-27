@@ -1,6 +1,15 @@
 /**
  * Teste da Fase 05 — Listagem e Pesquisa
- * Valida listas de músicas, artistas e filtros de busca
+ * Valida listas de músicas, artistas e filtros de busca.
+ *
+ * Este teste chama loadCatalog(), que busca `index.json` no repositório
+ * cifra-catalogo via raw.githubusercontent.com (não usa mais a API do
+ * GitHub, que tinha limite de 60 req/hora e causava falhas intermitentes).
+ *
+ * Requer internet e que `index.json` já exista no repositório cifra-catalogo
+ * (gerado por scripts/gerar-indice.js naquele repositório).
+ *
+ * Execução: node test-fase05.js
  */
 
 import { loadCatalog, groupByArtist } from './js/modules/catalog-loader.js';

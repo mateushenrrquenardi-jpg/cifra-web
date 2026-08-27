@@ -797,6 +797,16 @@ input {
   font-weight: 700;
 }
 
+/* Estados do corpo da cifra ao carregar sob demanda (Fase 05) */
+.viewer-loading {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.viewer-error {
+  color: #f87171;
+}
+
 /* ==========================================================================
    12. Publicação Direta — Configuração de Token (Fase 04)
    ========================================================================== */

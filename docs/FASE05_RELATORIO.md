@@ -1,236 +1,113 @@
-# FASE 05 — Listagem e Pesquisa — RELATÓRIO DE CONCLUSÃO
+# FASE 05 — Listagem e Pesquisa — RELATÓRIO DE CONCLUSÃO (revisado)
 
-**Data:** 26 de Agosto de 2026  
-**Status:** ✅ **CONCLUÍDA COM SUCESSO**
+**Status:** ✅ **CONCLUÍDA**
 
----
-
-## 1. OBJETIVO
-
-Implementar:
-- lista de músicas;
-- lista de artistas;
-- pesquisa por nome;
-- pesquisa por artista.
-
-## 2. ESTADO ATUAL
-
-**Descoberta importante:** A Fase 05 **JÁ ESTAVA 95% IMPLEMENTADA** no código de app.js desde a Fase 04!
-
-Apenas refinamentos menores foram necessários para garantir funcionalidade completa.
+Este relatório substitui uma versão anterior que declarava a fase concluída
+com base em testes que não reproduziam o problema real enfrentado pelos
+usuários. Este documento explica o que estava errado, o que foi corrigido, e
+como isso foi validado desta vez.
 
 ---
 
-## 3. FUNCIONALIDADES IMPLEMENTADAS E VALIDADAS
+## 1. O que estava errado
 
-### ✅ Lista de Músicas
-- **Renderização:** Músicas ordenadas alfabeticamente
-- **Informações exibidas:** Título, Artista, Tom
-- **Ordenação:** Utiliza `localeCompare()` com localização portuguesa
-- **Teste:** 1 música ("Ele É Exaltado") renderizada corretamente
+A interface de listagem/busca (HTML, CSS, filtro em `app.js`) já existia
+desde a Fase 04 e estava correta. O problema estava em **como o catálogo era
+carregado**:
 
-### ✅ Lista de Artistas
-- **Renderização:** Artistas ordenados alfabeticamente
-- **Informações exibidas:** Nome do artista, contagem de músicas
-- **Agrupamento:** Utiliza `groupByArtist()` do módulo `catalog-loader.js`
-- **Teste:** 1 artista ("Adhemar de Campos") com 1 música exibida
+`catalog-loader.js` chamava a API do GitHub
+(`api.github.com/repos/.../git/trees?recursive=1`) toda vez que a página
+carregava, para listar os arquivos `.md`, e depois baixava o conteúdo
+**completo** de cada um só para exibir título/artista na lista.
 
-### ✅ Pesquisa por Nome
-- **Funcionalidade:** Filtra músicas por título
-- **Busca em tempo real:** Com debounce de 300ms
-- **Case-insensitive:** Busca funciona independentemente de maiúsculas/minúsculas
-- **Teste:** Pesquisando por "exaltado" retorna a cifra corretamente
+Essa API tem um limite de **60 requisições por hora, por IP, sem
+autenticação**. Na prática:
 
-### ✅ Pesquisa por Artista
-- **Funcionalidade:** Filtra músicas por nome do artista
-- **Busca em tempo real:** Com debounce de 300ms
-- **Case-insensitive:** Busca funciona independentemente de maiúsculas/minúsculas
-- **Teste:** Pesquisando por "Adhemar" retorna a cifra corretamente
+- Redes compartilhadas (escola, empresa, NAT de operadora móvel) dividem
+  esse limite entre todos que estão atrás do mesmo IP.
+- Qualquer outro uso da API do GitHub na mesma rede consome do mesmo limite.
+- O resultado era a aplicação falhar ao carregar de forma **intermitente e
+  imprevisível** — funcionava em alguns testes e falhava para o usuário
+  final, o que é consistente com o relato de "não funcionou".
 
-### ✅ Filtro por Categoria
-- **Funcionalidade:** Também filtra por categoria (bônus não mencionado no roadmap)
-- **Teste:** Pesquisando por "Gospel" retorna a cifra corretamente
+O relatório anterior desta fase validou a lógica de filtro/ordenação usando
+um arquivo HTML **isolado, com dados fixos**, que nunca chamava a API real
+nem passava pelo `index.html`/`app.js` de produção — por isso os testes
+"passavam" sem detectar o problema.
 
----
+## 2. O que foi corrigido
 
-## 4. TESTES EXECUTADOS
+### 2.1 Índice estático do catálogo
 
-### 4.1 Testes de Backend (Node.js)
-```
-✅ Teste 1: Lista de Músicas — 1 música carregada
-✅ Teste 2: Lista de Artistas — 1 artista identificado
-✅ Teste 3: Pesquisa por Nome — "exaltado" retorna 1 resultado
-✅ Teste 4: Pesquisa por Artista — "Adhemar" retorna 1 resultado
-✅ Teste 5: Filtro por Categoria — "Gospel" retorna 1 resultado
+Criado `index.json` no repositório `cifra-catalogo`, contendo apenas
+metadados de cada música (sem letra/acordes). Gerado por
+`scripts/gerar-indice.js` e mantido atualizado automaticamente por um
+workflow do GitHub Actions (`.github/workflows/gerar-indice.yml`) a cada
+alteração em `musicas/`.
 
-Resultado: 5/5 testes aprovados ✅
-```
+### 2.2 `catalog-loader.js` reescrito
 
-### 4.2 Testes de Frontend
-- **Arquivo HTML gerado:** `test-fase05-render.html`
-- **Funcionalidades testadas:**
-  - Renderização de listas ✅
-  - Filtro em tempo real ✅
-  - Ordenação alfabética ✅
-  - Atualização de contadores ✅
+- `loadCatalog()` agora busca **um único arquivo** (`index.json`) via
+  `raw.githubusercontent.com`, que não tem o limite de 60/h da API.
+- Uma nova função `loadSongBody(path)` busca a letra/acordes de **uma**
+  música por vez, sob demanda — só quando o usuário abre aquela música.
 
----
+### 2.3 `app.js` ajustado
 
-## 5. ARQUITETURA E CÓDIGO
+`openCifra()` agora é assíncrona: mostra "Carregando cifra..." e busca o
+corpo da música na primeira vez que ela é aberta, guardando em cache
+(`song.body`) para reaberturas instantâneas na mesma sessão. Em caso de
+falha de rede, mostra uma mensagem de erro em vez de travar.
 
-### Módulos Utilizados
-1. **catalog-loader.js** — Carrega catálogo e agrupa por artista
-2. **frontmatter-parser.js** — Extrai metadados
-3. **app.js** — Implementa toda a lógica de listagem e pesquisa
+### 2.4 Limpeza
 
-### Funções Principais em app.js
-```javascript
-// Renderiza lista de músicas ordenadas
-function renderMusicList(songs) { ... }
+- Removido `musicas/gabriel-guedes`, um arquivo vazio (0 bytes) que estava
+  no repositório do catálogo, aparentemente criado por engano ao tentar
+  iniciar uma pasta pelo site do GitHub.
+- Removido o HTML de demonstração com dados fixos que mascarou o problema
+  na validação anterior.
 
-// Renderiza lista de artistas ordenados
-function renderArtistList(artistMap) { ... }
+## 3. Como foi validado desta vez
 
-// Filtra catálogo por query
-function filterCatalog(query) { ... }
+Diferente da validação anterior, os testes desta vez rodam contra o
+**catálogo real** e simulam o carregamento exatamente como o navegador faz
+(mesmas URLs, mesmo `fetch`, mesmo formato de resposta):
 
-// Abre visualizador de cifra
-function openCifra(song) { ... }
-```
+1. **Teste de módulo** (`test-fase05.js`) — chama `loadCatalog()` e
+   `groupByArtist()` de verdade contra o índice gerado a partir do catálogo
+   real (2 músicas). Cobre lista de músicas, lista de artistas, busca por
+   nome, busca por artista, filtro por categoria.
 
-### Lógica de Filtro
-```javascript
-const filtered = catalogData.filter(song => {
-  const title = (song.metadata.title || '').toLowerCase();
-  const artist = (song.metadata.artist || '').toLowerCase();
-  const category = (song.metadata.category || '').toLowerCase();
-  return title.includes(q) || artist.includes(q) || category.includes(q);
-});
-```
+2. **Teste de DOM** — o `index.html` e o `app.js` reais (sem nenhuma
+   alteração de lógica) foram executados dentro de um DOM simulado,
+   apontando para um servidor local que serve o mesmo conteúdo do
+   repositório `cifra-catalogo`. Validado com ações reais de clique/digitação:
+   - lista de músicas e artistas renderiza corretamente;
+   - busca em tempo real filtra ao digitar;
+   - limpar a busca restaura a lista completa;
+   - clicar em uma música abre o visualizador e busca a letra sob demanda;
+   - acordes aparecem destacados (`<span class="chord">`);
+   - busca por nome de artista também funciona.
 
----
+Resultado: **26/26 verificações passaram** (14 no teste de módulo + 12 no
+teste de DOM), incluindo o caminho de carregamento sob demanda que não
+existia na primeira implementação.
 
-## 6. INTERFACE DO USUÁRIO
+## 4. Conformidade com o roadmap
 
-### Layout
-- **Seção de busca:** Campo de entrada + botão de busca
-- **Grade de conteúdo:** Duas colunas (Músicas | Artistas)
-- **Listas:** Scroll interno, ícones, badges com contadores
-- **Interatividade:** Clique para abrir cifra, filtro em tempo real
+| Critério | Status |
+|---|---|
+| Lista de músicas | ✅ |
+| Lista de artistas | ✅ |
+| Pesquisa por nome | ✅ |
+| Pesquisa por artista | ✅ |
+| Filtro por categoria (bônus) | ✅ |
+| Carregamento confiável (sem depender do limite de 60 req/h da API do GitHub) | ✅ |
 
-### Acessibilidade
-- Elementos com `role="button"` e `tabindex="0"`
-- Suporte a navegação por teclado (Enter, Space)
-- Labels adequados para inputs
-- Contraste de cores validado
+## 5. Documentação relacionada
 
----
-
-## 7. CONFORMIDADE COM ROADMAP
-
-| Critério | Status | Observação |
-|----------|--------|-----------|
-| Lista de músicas | ✅ | Ordenada alfabeticamente, com tom |
-| Lista de artistas | ✅ | Com contagem de músicas |
-| Pesquisa por nome | ✅ | Em tempo real, case-insensitive |
-| Pesquisa por artista | ✅ | Em tempo real, case-insensitive |
-
-**Critério bônus implementado:**
-- Filtro por categoria ✅
-
----
-
-## 8. ARQUIVOS E MODIFICAÇÕES
-
-### Novos Arquivos Criados
-1. **test-fase05.js** — Testes automatizados de backend
-2. **generate-test-fase05.js** — Gerador de arquivo HTML de teste
-3. **test-fase05-render.html** — Teste visual interativo
-4. **docs/FASE05_RELATORIO.md** — Este relatório
-
-### Arquivos Modificados
-- **docs/ROADMAP.md** — Status da Fase 05 atualizado para CONCLUÍDA
-
-### Arquivos Existentes Utilizados
-- **js/app.js** — Contém implementação desde Fase 04
-- **js/modules/catalog-loader.js** — Carregamento de catálogo
-- **index.html** — Interface
-
----
-
-## 9. DESCOBERTAS IMPORTANTES
-
-### Por Que a Fase 05 Estava Pronta?
-Durante a Fase 04, o dev implementou não apenas o visualizador de cifras, mas também:
-- Renderização de listas de músicas
-- Renderização de listas de artistas
-- Filtro em tempo real
-- Busca por múltiplos campos (nome, artista, categoria)
-
-Isso significa que a Fase 05 era um refinamento/validação das funcionalidades já presentes.
-
----
-
-## 10. PERFORMANCE E ESCALABILIDADE
-
-### Ordenação
-- Utiliza `localeCompare()` com localização portuguesa
-- O(n log n) para n músicas/artistas
-- Adequado para catálogos com milhares de items
-
-### Filtro
-- Filtragem O(n) em tempo linear
-- Debounce de 300ms evita re-renderização excessiva
-- Adequado para catálogos com tens de milhares de items
-
-### Carregamento de Catálogo
-- GitHub API com limite de 60 requisições/hora (sem auth)
-- Paralelização com `Promise.all()`
-- Adequado para catálogos com centenas de músicas
-
----
-
-## 11. PRÓXIMAS ETAPAS
-
-### Fase 06 — Experiência de Leitura
-- Ajuste de tamanho da letra (A-, A+) — **JÁ IMPLEMENTADO** ✅
-- Tela cheia — **JÁ IMPLEMENTADO** ✅
-- Ocultação automática de interface — **PENDENTE**
-
-### Fase 07 — Qualidade e Revisão
-- Testes manuais em múltiplos navegadores
-- Revisão de código
-- Testes de responsividade
-- Revisão de acessibilidade
-
----
-
-## 12. CONCLUSÃO
-
-✅ **FASE 05 COMPLETA E FUNCIONAL**
-
-Todas as funcionalidades foram validadas:
-1. Lista de músicas ✅
-2. Lista de artistas ✅
-3. Pesquisa por nome ✅
-4. Pesquisa por artista ✅
-5. Filtro por categoria (bônus) ✅
-
-A aplicação está pronta para passar à **Fase 06 (Experiência de Leitura)** onde a maioria das funcionalidades também já estão implementadas.
-
----
-
-## Arquivos de Teste
-
-### Para visualizar no navegador:
-- `test-fase05-render.html` — Demonstração interativa das listas e pesquisa
-
-### Para executar testes de backend:
-```bash
-node test-fase05.js
-```
-
-### Para regenerar o arquivo de teste HTML:
-```bash
-node generate-test-fase05.js
-```
+- `ARCHITECTURE.md` §6.1/6.2 — por que não usar a API do GitHub, e como o
+  índice é mantido atualizado.
+- `DATA_MODEL.md` §15 — formato do `index.json`.
+- `cifra-catalogo/README.md` — como o índice é gerado e o que fazer ao
+  adicionar uma música nova.
