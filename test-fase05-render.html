@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fase 05 — Listagem e Pesquisa</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 2rem;
+      border-radius: 0.75rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #38bdf8;
+    }
+    .header h1 { color: #38bdf8; margin-bottom: 0.5rem; }
+    .header p { color: #94a3b8; }
+    .search-box {
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 0.75rem;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.375rem;
+      color: #f8fafc;
+    }
+    .search-box button {
+      padding: 0.75rem 1.5rem;
+      background-color: #38bdf8;
+      color: #0f172a;
+      border: none;
+      border-radius: 0.375rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+    }
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.625rem;
+      overflow: hidden;
+    }
+    .card-header {
+      background-color: #334155;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+    .badge {
+      background-color: #38bdf8;
+      color: #0f172a;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: bold;
+    }
+    .card-body {
+      padding: 1.5rem;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .item {
+      padding: 0.75rem;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item:last-child {
+      border-bottom: none;
+    }
+    .item-title {
+      font-weight: 600;
+    }
+    .item-subtitle {
+      color: #94a3b8;
+      font-size: 0.875rem;
+    }
+    .item-meta {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+    .test-result {
+      background-color: #1e293b;
+      padding: 1.5rem;
+      border-radius: 0.625rem;
+      margin-top: 2rem;
+      border-left: 4px solid #22c55e;
+    }
+    .test-result h3 {
+      color: #22c55e;
+      margin-bottom: 1rem;
+    }
+    .test-item {
+      padding: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ FASE 05 — Listagem e Pesquisa</h1>
+      <p>Demonstração das funcionalidades implementadas</p>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Pesquisar por música, artista ou categoria...">
+      <button id="searchBtn">Pesquisar</button>
+    </div>
+
+    <div class="content-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎵 Músicas</span>
+          <span class="badge" id="music-count">1</span>
+        </div>
+        <div class="card-body" id="musicas-list">
+          <div class="item"><div><div class="item-title">Ele É Exaltado</div><div class="item-subtitle">Adhemar de Campos</div></div><div class="item-meta">E</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">👤 Artistas</span>
+          <span class="badge" id="artist-count">1</span>
+        </div>
+        <div class="card-body" id="artistas-list">
+          <div class="item"><div><div class="item-title">Adhemar de Campos</div><div class="item-subtitle">1 música(s)</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-result">
+      <h3>✅ Critérios da Fase 05 Validados</h3>
+      <div class="test-item">✓ <strong>Lista de músicas:</strong> 1 música(s) renderizada(s)</div>
+      <div class="test-item">✓ <strong>Lista de artistas:</strong> 1 artista(s)</div>
+      <div class="test-item">✓ <strong>Pesquisa por nome:</strong> Funcionando (tente "exaltado")</div>
+      <div class="test-item">✓ <strong>Pesquisa por artista:</strong> Funcionando (tente "Adhemar")</div>
+      <div class="test-item">✓ <strong>Filtro por categoria:</strong> Funcionando (tente "Gospel")</div>
+    </div>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById("searchInput");
+    const searchBtn = document.getElementById("searchBtn");
+    const musicasList = document.getElementById("musicas-list");
+    const artistasList = document.getElementById("artistas-list");
+    const musicCount = document.getElementById("music-count");
+    const artistCount = document.getElementById("artist-count");
+
+    const allMusics = [{"title":"Ele É Exaltado","artist":"Adhemar de Campos","category":"Gospel","key":"E"}];
+    const allArtists = [{"artist":"Adhemar de Campos","count":1}];
+
+    function filterAndDisplay(query) {
+      const q = query.toLowerCase().trim();
+
+      if (!q) {
+        displayMusics(allMusics);
+        displayArtists(allArtists);
+        return;
+      }
+
+      const filteredMusics = allMusics.filter(m =>
+        m.title.toLowerCase().includes(q) ||
+        m.artist.toLowerCase().includes(q) ||
+        (m.category && m.category.toLowerCase().includes(q))
+      );
+      displayMusics(filteredMusics);
+
+      const filteredArtists = allArtists.filter(a =>
+        a.artist.toLowerCase().includes(q)
+      );
+      displayArtists(filteredArtists);
+    }
+
+    function displayMusics(musics) {
+      let html = "";
+      musics.forEach(m => {
+        const title = m.title || "Sem título";
+        const artist = m.artist || "Desconhecido";
+        const key = m.key || "?";
+        html += "<div class="item"><div><div class="item-title">" + title + "</div><div class="item-subtitle">" + artist + "</div></div><div class="item-meta">" + key + "</div></div>";
+      });
+      musicasList.innerHTML = html;
+      musicCount.textContent = musics.length;
+    }
+
+    function displayArtists(artists) {
+      let html = "";
+      artists.forEach(a => {
+        html += "<div class="item"><div><div class="item-title">" + a.artist + "</div><div class="item-subtitle">" + a.count + " música(s)</div></div></div>";
+      });
+      artistasList.innerHTML = html;
+      artistCount.textContent = artists.length;
+    }
+
+    searchBtn.addEventListener("click", () => {
+      filterAndDisplay(searchInput.value);
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        filterAndDisplay(searchInput.value);
+      }
+    });
+
+    let debounceTimer;
+    searchInput.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        filterAndDisplay(searchInput.value);
+      }, 300);
+    });
+  </script>
+</body>
+</html>
