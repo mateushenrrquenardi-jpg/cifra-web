@@ -1,111 +1,208 @@
 /**
  * Cifra Web — Módulo de Carregamento do Catálogo
- * Fase 05: Listagem e Pesquisa
- *
- * ANTES (Fase 04 / primeira tentativa de Fase 05):
- *   Este módulo listava o catálogo chamando a API do GitHub
- *   (`api.github.com/.../git/trees`) a cada carregamento de página, e em
- *   seguida baixava o conteúdo COMPLETO de cada arquivo .md só para exibir
- *   título/artista na lista. A API do GitHub sem autenticação tem limite de
- *   60 requisições/hora POR IP — em redes compartilhadas (escola, empresa,
- *   4G/NAT) esse limite estoura rápido e a aplicação passa a mostrar erro
- *   de carregamento para todo mundo atrás daquele IP. Essa é a causa mais
- *   provável de a Fase 05 anterior "não funcionar" na prática.
- *
- * AGORA:
- *   A listagem usa um único arquivo estático `index.json`, mantido no
- *   repositório do catálogo (cifra-catalogo) e gerado a partir dos arquivos
- *   .md (ver cifra-catalogo/scripts/gerar-indice.js e o workflow do GitHub
- *   Actions que o mantém atualizado). Esse arquivo é lido via
- *   raw.githubusercontent.com, que é um CDN sem o limite de 60/h da API.
- *
- *   O corpo (letra + acordes) de cada música só é buscado quando o usuário
- *   efetivamente abre aquela música (carregamento sob demanda), também via
- *   raw.githubusercontent.com.
- *
- * Essa decisão resolve o ponto em aberto listado em ARCHITECTURE.md §17
- * ("mecanismo exato de busca; geração de índice de catálogo; formato do
- * índice; mecanismo de acesso aos arquivos remotos"). Documentado também
- * em ARCHITECTURE.md e DATA_MODEL.md.
- *
+ * Fase 05 & 06: Listagem, Pesquisa & Experiência de Leitura
+ * 
  * Regras: Vanilla JS puro, sem dependências.
+ * 
+ * Carregamento resiliente:
+ * 1. Tenta index.json via raw.githubusercontent.com (CDN sem rate limit).
+ * 2. Suporta tanto formato em array quanto formato de objeto `{ songs: [...] }`.
+ * 3. Fallback via API REST do GitHub (/git/trees) se index.json falhar.
+ * 4. Carregamento sob demanda via loadSongBody() se a música ainda não possuir o corpo baixado.
  */
 
 'use strict';
 
 import { parseFrontmatter } from './frontmatter-parser.js';
 
-// Configuração do repositório de catálogo
+// Configuração do repositório
 const GITHUB_OWNER = 'mateushenrrquenardi-jpg';
 const GITHUB_REPO = 'cifra-catalogo';
 const GITHUB_BRANCH = 'main';
+const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
 const RAW_BASE = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 const INDEX_URL = `${RAW_BASE}/index.json`;
 
 /**
- * Carrega o índice do catálogo (apenas metadados, sem o corpo das cifras).
- *
- * @returns {Promise<Array<{ path: string, metadata: object, body: null }>>}
+ * Tenta carregar o índice pré-compilado (index.json) via CDN do GitHub.
+ * 
+ * @returns {Promise<Array<{ path: string, metadata: object, body: string|null }>|null>}
  */
-export async function loadCatalog() {
-  console.log('[Cifra Web] Carregando índice do catálogo...');
+async function loadFromIndexJson() {
+  try {
+    const url = `${INDEX_URL}?t=${Date.now()}`;
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json, text/plain, */*' }
+    });
 
-  const response = await fetch(INDEX_URL, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`index.json retornou HTTP ${response.status}`);
+    }
 
-  if (!response.ok) {
-    throw new Error(
-      `Não foi possível carregar index.json (HTTP ${response.status}). ` +
-      `Verifique se o arquivo existe na raiz do repositório "${GITHUB_REPO}".`
-    );
+    const text = await response.text();
+    const data = JSON.parse(text);
+
+    let rawList = [];
+    if (Array.isArray(data)) {
+      rawList = data;
+    } else if (data && Array.isArray(data.songs)) {
+      rawList = data.songs;
+    }
+
+    if (rawList.length > 0) {
+      console.log(`[Cifra Web] Catálogo carregado via index.json (${rawList.length} cifra(s)).`);
+      return rawList.map(item => {
+        // Se a entrada já possui metadata estruturada
+        if (item.metadata) {
+          return {
+            path: item.path,
+            metadata: item.metadata,
+            body: item.body || null
+          };
+        }
+        // Se a entrada usa o formato plano { path, title, artist, ... }
+        return {
+          path: item.path,
+          metadata: {
+            title: item.title || item.path.split('/').pop().replace('.md', ''),
+            artist: item.artist || 'Desconhecido',
+            category: item.category || 'Gospel',
+            tags: item.tags || [],
+            author: item.author,
+            created_at: item.created_at || item.createdAt,
+            original_key: item.original_key || item.originalKey || ''
+          },
+          body: item.body || null
+        };
+      });
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('[Cifra Web] Não foi possível carregar index.json:', error.message);
+    return null;
   }
-
-  const data = await response.json();
-  const songs = Array.isArray(data.songs) ? data.songs : [];
-
-  console.log(`[Cifra Web] Catálogo carregado: ${songs.length} cifra(s).`);
-
-  // Normaliza cada entrada do índice para o formato usado pela UI
-  // ({ path, metadata, body }), mantendo `body` como null até ser
-  // carregado sob demanda por loadSongBody().
-  return songs.map((song) => ({
-    path: song.path,
-    metadata: {
-      title: song.title,
-      artist: song.artist,
-      category: song.category,
-      tags: song.tags || [],
-      author: song.author || undefined,
-      created_at: song.created_at,
-      original_key: song.original_key
-    },
-    body: null
-  }));
 }
 
 /**
- * Busca o conteúdo completo (letra + acordes) de UMA música, sob demanda.
- * Usado quando o usuário abre uma cifra específica para visualização.
- *
- * @param {string} filePath — Caminho relativo no repositório de catálogo
- *   (ex: "musicas/adhemar-de-campos/ele-e-exaltado.md")
+ * Fallback: Lista os arquivos do catálogo via API de árvores do GitHub.
+ * 
+ * @returns {Promise<string[]>}
+ */
+async function listCatalogFiles() {
+  try {
+    const response = await fetch(`${API_BASE}/git/trees/${GITHUB_BRANCH}?recursive=1`, {
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API retornou ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return (data.tree || [])
+      .filter(item => item.type === 'blob' && item.path.startsWith('musicas/') && item.path.endsWith('.md'))
+      .map(item => item.path);
+  } catch (error) {
+    console.error('[Cifra Web] Erro ao listar arquivos do catálogo via GitHub API:', error);
+    return [];
+  }
+}
+
+/**
+ * Obtém o conteúdo bruto de um arquivo .md do repositório.
+ * 
+ * @param {string} filePath
+ * @returns {Promise<string|null>}
+ */
+async function fetchFileContent(filePath) {
+  try {
+    const response = await fetch(`${RAW_BASE}/${filePath}`);
+    if (!response.ok) {
+      throw new Error(`Erro ao buscar ${filePath}: ${response.status}`);
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(`[Cifra Web] Erro ao buscar conteúdo de ${filePath}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fallback: Carrega o catálogo escaneando todos os arquivos .md via API do GitHub.
+ * 
+ * @returns {Promise<Array<{ path: string, metadata: object, body: string }>>}
+ */
+async function loadFromGitHubTree() {
+  console.log('[Cifra Web] Tentando carregar catálogo via API do GitHub...');
+
+  const filePaths = await listCatalogFiles();
+  if (filePaths.length === 0) return [];
+
+  console.log(`[Cifra Web] Encontrados ${filePaths.length} arquivo(s) via API.`);
+
+  const results = await Promise.all(
+    filePaths.map(async (filePath) => {
+      const content = await fetchFileContent(filePath);
+      if (!content) return null;
+
+      const { metadata, body } = parseFrontmatter(content);
+
+      return {
+        path: filePath,
+        metadata,
+        body
+      };
+    })
+  );
+
+  return results.filter(item => item !== null);
+}
+
+/**
+ * Carrega todo o catálogo utilizando estratégias em cascata.
+ * 
+ * @returns {Promise<Array<{ path: string, metadata: object, body: string|null }>>}
+ */
+export async function loadCatalog() {
+  console.log('[Cifra Web] Iniciando carregamento do catálogo...');
+
+  // Estratégia 1: index.json (Raw CDN, sem rate limit)
+  const indexData = await loadFromIndexJson();
+  if (indexData) {
+    return indexData;
+  }
+
+  // Estratégia 2: GitHub API Tree Fallback
+  const treeData = await loadFromGitHubTree();
+  if (treeData && treeData.length > 0) {
+    return treeData;
+  }
+
+  console.warn('[Cifra Web] Nenhuma cifra foi carregada.');
+  return [];
+}
+
+/**
+ * Busca o conteúdo completo (letra + acordes) de UMA música sob demanda.
+ * 
+ * @param {string} filePath — Caminho relativo (ex: "musicas/adhemar-de-campos/ele-e-exaltado.md")
  * @returns {Promise<{ metadata: object, body: string }>}
  */
 export async function loadSongBody(filePath) {
-  const response = await fetch(`${RAW_BASE}/${filePath}`, { cache: 'no-store' });
-
-  if (!response.ok) {
-    throw new Error(`Não foi possível carregar "${filePath}" (HTTP ${response.status}).`);
+  const content = await fetchFileContent(filePath);
+  if (!content) {
+    throw new Error(`Não foi possível carregar "${filePath}".`);
   }
-
-  const content = await response.text();
   return parseFrontmatter(content);
 }
 
 /**
  * Agrupa as cifras por artista.
- *
+ * 
  * @param {Array<{ path: string, metadata: object, body: string|null }>} catalog
- * @returns {Map<string, Array>} — Mapa artista → array de cifras
+ * @returns {Map<string, Array>}
  */
 export function groupByArtist(catalog) {
   const artistMap = new Map();
@@ -122,12 +219,13 @@ export function groupByArtist(catalog) {
 }
 
 /**
- * Exporta configurações do repositório para uso em outros módulos.
+ * Exporta configurações do repositório.
  */
 export const REPO_CONFIG = {
   owner: GITHUB_OWNER,
   repo: GITHUB_REPO,
   branch: GITHUB_BRANCH,
   rawBase: RAW_BASE,
+  apiBase: API_BASE,
   indexUrl: INDEX_URL
 };
