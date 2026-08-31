@@ -1,16 +1,16 @@
 /**
  * Cifra Web — Aplicação Principal
- * Fase 05: Listagem, Pesquisa e Visualizador
- *
+ * Fase 05: Listagem e Pesquisa
+ * 
  * Regras: Vanilla JavaScript puro, sem dependências ou frameworks.
  */
 
 'use strict';
 
-import { loadCatalog, loadSongBody, groupByArtist } from './modules/catalog-loader.js';
+import { loadCatalog, groupByArtist } from './modules/catalog-loader.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Cifra Web] Aplicação inicializada — Fase 05: Listagem e Pesquisa.');
+  console.log('[Cifra Web] Aplicação inicializada — Fase 05: Listagem & Pesquisa.');
 
   // Elementos principais da interface
   const searchInput = document.getElementById('search-input');
@@ -22,18 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const countMusicas = document.getElementById('count-musicas');
   const countArtistas = document.getElementById('count-artistas');
 
-  // Visualizador de cifra
-  const viewerContainer = document.getElementById('cifra-viewer-container');
-  const viewerSongTitle = document.getElementById('viewer-song-title');
-  const viewerArtistName = document.getElementById('viewer-artist-name');
-  const cifraBody = document.getElementById('cifra-body');
-  const btnFontDec = document.getElementById('btn-font-dec');
-  const btnFontInc = document.getElementById('btn-font-inc');
-  const btnFullscreen = document.getElementById('btn-fullscreen');
-
   // Estado da aplicação
   let catalogData = [];
-  let currentFontSize = 1; // rem
 
   /**
    * Renderiza a lista de músicas no DOM
@@ -80,12 +70,16 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      // Evento para abrir a cifra
-      li.addEventListener('click', () => openCifra(song));
+      // Evento para abrir a cifra em uma página diferente
+      const openAction = () => {
+        window.location.href = `cifra.html?path=${encodeURIComponent(song.path)}`;
+      };
+
+      li.addEventListener('click', openAction);
       li.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          openCifra(song);
+          openAction();
         }
       });
 
@@ -155,61 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Abre e renderiza uma cifra no visualizador.
-   *
-   * O índice do catálogo (loadCatalog) traz apenas metadados — o corpo
-   * (letra + acordes) é buscado aqui, sob demanda, na primeira vez que a
-   * música é aberta, e depois fica em cache em `song.body` para reaberturas
-   * instantâneas na mesma sessão.
-   *
-   * @param {{ path: string, metadata: object, body: string|null }} song
-   */
-  async function openCifra(song) {
-    if (!viewerContainer) return;
-
-    viewerSongTitle.textContent = song.metadata.title || 'Sem título';
-    viewerArtistName.textContent = song.metadata.artist || 'Desconhecido';
-
-    const codeEl = cifraBody.querySelector('code');
-
-    viewerContainer.hidden = false;
-    viewerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    // Já temos o corpo em cache (aberta antes nesta sessão)
-    if (song.body !== null && song.body !== undefined) {
-      if (codeEl) codeEl.innerHTML = renderCifraBody(song.body);
-      return;
-    }
-
-    // Buscar o corpo sob demanda
-    if (codeEl) codeEl.innerHTML = '<span class="viewer-loading">Carregando cifra...</span>';
-
-    try {
-      const { body } = await loadSongBody(song.path);
-      song.body = body; // cache para próximas aberturas
-      if (codeEl) codeEl.innerHTML = renderCifraBody(body);
-    } catch (error) {
-      console.error('[Cifra Web] Erro ao carregar corpo da cifra:', error);
-      if (codeEl) {
-        codeEl.innerHTML = '<span class="viewer-error">Não foi possível carregar esta cifra. Tente novamente.</span>';
-      }
-    }
-  }
-
-  /**
-   * Renderiza o corpo da cifra com destaque para acordes no formato [ACORDE]
-   * @param {string} body
-   * @returns {string} HTML
-   */
-  function renderCifraBody(body) {
-    if (!body) return '';
-    // Escapar HTML primeiro, depois destacar acordes
-    const escaped = escapeHtml(body);
-    // Substituir [ACORDE] por spans coloridos
-    return escaped.replace(/\[([^\]]+)\]/g, '<span class="chord">$1</span>');
-  }
-
-  /**
    * Escape HTML para exibição segura
    * @param {string} str
    * @returns {string}
@@ -232,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const q = query.toLowerCase().trim();
 
     if (!q) {
-      // Sem filtro: mostrar tudo
       renderMusicList(catalogData);
       renderArtistList(groupByArtist(catalogData));
       return;
@@ -247,98 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderMusicList(filtered);
     renderArtistList(groupByArtist(filtered));
-  }
-
-  // ── Controles do Visualizador ──
-
-  if (btnFontDec) {
-    btnFontDec.addEventListener('click', () => {
-      currentFontSize = Math.max(0.6, currentFontSize - 0.1);
-      cifraBody.style.fontSize = `${currentFontSize}rem`;
-    });
-  }
-
-  if (btnFontInc) {
-    btnFontInc.addEventListener('click', () => {
-      currentFontSize = Math.min(2.5, currentFontSize + 0.1);
-      cifraBody.style.fontSize = `${currentFontSize}rem`;
-    });
-  }
-
-  if (btnFullscreen) {
-    btnFullscreen.addEventListener('click', () => {
-      if (viewerContainer) {
-        if (!document.fullscreenElement) {
-          viewerContainer.requestFullscreen().catch(() => {});
-        } else {
-          document.exitFullscreen().catch(() => {});
-        }
-      }
-    });
-  }
-
-  // ── Fase 06: Ocultação Automática de Interface ──
-
-  let uiHideTimeout;
-  const UI_HIDE_DELAY = 3000; // 3 segundos
-  let uiHidden = false;
-
-  function getViewerHeader() {
-    return viewerContainer ? viewerContainer.querySelector('.viewer-header') : null;
-  }
-
-  function showUI() {
-    const header = getViewerHeader();
-    if (header) {
-      header.classList.remove('hidden-ui');
-      uiHidden = false;
-      clearTimeout(uiHideTimeout);
-      
-      // Agendar ocultação novamente
-      uiHideTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
-    }
-  }
-
-  function hideUI() {
-    const header = getViewerHeader();
-    if (header && !document.fullscreenElement) return; // Só ocultar em fullscreen
-    if (header) {
-      header.classList.add('hidden-ui');
-      uiHidden = true;
-    }
-  }
-
-  // Listeners para mostrar UI quando necessário
-  if (viewerContainer) {
-    // Mostrar UI ao mover o mouse
-    viewerContainer.addEventListener('mousemove', () => {
-      if (document.fullscreenElement && uiHidden) {
-        showUI();
-      }
-    });
-
-    // Mostrar UI ao pressionar qualquer tecla
-    document.addEventListener('keydown', (e) => {
-      if (document.fullscreenElement && uiHidden) {
-        showUI();
-      }
-    });
-
-    // Agendar ocultação inicial quando entrar em fullscreen
-    viewerContainer.addEventListener('fullscreenchange', () => {
-      if (document.fullscreenElement) {
-        // Entrou em fullscreen - agendar ocultação
-        uiHideTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
-      } else {
-        // Saiu de fullscreen - mostrar UI
-        const header = getViewerHeader();
-        if (header) {
-          header.classList.remove('hidden-ui');
-          uiHidden = false;
-          clearTimeout(uiHideTimeout);
-        }
-      }
-    });
   }
 
   // ── Busca ──
@@ -368,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Inicialização: Carregar Catálogo ──
 
   async function init() {
-    // Mostrar estado de carregamento
     if (musicasPlaceholder) {
       musicasPlaceholder.querySelector('.placeholder-title').textContent = 'Carregando catálogo...';
       musicasPlaceholder.querySelector('.placeholder-desc').textContent = 'Buscando músicas do repositório GitHub.';

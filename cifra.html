@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Visualizador de Cifras — Cifra Web.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Cifra Web — Visualizador</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/viewer-app.js" defer></script>
+</head>
+<body>
+  <header class="site-header viewer-header-nav">
+    <div class="container header-container">
+      <div class="brand">
+        <a href="index.html" class="brand-link" aria-label="Voltar para a página inicial">
+          <span class="brand-icon" aria-hidden="true">♪</span>
+        </a>
+        <div class="brand-text">
+          <h1 class="site-title"><a href="index.html" class="title-link">Cifra Web</a></h1>
+          <p class="site-subtitle">Visualizador de Cifras</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-secondary btn-sm">← Voltar</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <!-- Mensagem de carregamento/erro inicial -->
+      <div id="viewer-status" class="placeholder-state">
+        <div class="placeholder-icon">⏳</div>
+        <p class="placeholder-title" id="status-title">Carregando cifra...</p>
+        <p class="placeholder-desc" id="status-desc">Buscando conteúdo da cifra no repositório.</p>
+      </div>
+
+      <!-- Área de Visualização de Cifra (Fase 04/06) -->
+      <section class="card viewer-section" id="cifra-viewer-container" aria-label="Visualizador de Cifras" hidden>
+        <div class="viewer-header">
+          <div>
+            <h2 class="viewer-song-title" id="viewer-song-title">Título da Música</h2>
+            <p class="viewer-artist-name" id="viewer-artist-name">Artista</p>
+          </div>
+          <div class="viewer-controls">
+            <button type="button" class="btn btn-secondary" id="btn-font-dec" aria-label="Diminuir fonte">A-</button>
+            <button type="button" class="btn btn-secondary" id="btn-font-inc" aria-label="Aumentar fonte">A+</button>
+            <button type="button" class="btn btn-secondary" id="btn-fullscreen" aria-label="Tela cheia">⛶</button>
+          </div>
+        </div>
+        <pre class="cifra-body" id="cifra-body"><code><!-- Cifra renderizada --></code></pre>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <p class="footer-copy">&copy; 2026 Cifra Web — Catálogo mantido no GitHub.</p>
+      <p class="footer-meta">HTML5 &bull; CSS3 &bull; JavaScript Puro &bull; GitHub Pages</p>
+    </div>
+  </footer>
+</body>
+</html>
